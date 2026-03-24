@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { getProfile, login, signup } from './services/authService';
 import AuthPanel from './components/AuthPanel';
-import Dashboard from './pages/Dashboard';
+import Inicio from './pages/Inicio';
+import Analise from './pages/Analise';
+import Dados from './pages/Dados';
+import Financeiro from './pages/Financeiro';
+import Simulador from './pages/Simulador';
 import ProtectedRoute from './routes/ProtectedRoute';
 import AuthModal from './components/AuthModal';
 import Header from './components/Header';
@@ -17,11 +21,10 @@ function App() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
-
     (async () => {
       try {
         setLoading(true);
-        const profile = await getProfile(token);
+        const profile = await getProfile();
         setUser(profile);
       } catch {
         localStorage.removeItem('token');
@@ -32,15 +35,21 @@ function App() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!notification) return;
+    const t = setTimeout(() => setNotification(null), 3000);
+    return () => clearTimeout(t);
+  }, [notification]);
+
   const doSignup = async (dto) => {
     try {
       const result = await signup(dto);
       localStorage.setItem('token', result.token);
       setUser(result.user);
       setNotification({ type: 'success', message: 'Cadastro concluído!' });
-      navigate('/dashboard');
+      navigate('/inicio');
     } catch (error) {
-      setNotification({ type: 'error', message: error?.message || 'Erro no cadastro' });
+      setNotification({ type: 'error', message: error?.response?.data?.error || error?.message || 'Erro no cadastro' });
     }
   };
 
@@ -50,9 +59,9 @@ function App() {
       localStorage.setItem('token', result.token);
       setUser(result.user);
       setNotification({ type: 'success', message: 'Login realizado!' });
-      navigate('/dashboard');
+      navigate('/inicio');
     } catch (error) {
-      setNotification({ type: 'error', message: error?.message || 'Erro no login' });
+      setNotification({ type: 'error', message: error?.response?.data?.error || error?.message || 'Erro no login' });
     }
   };
 
@@ -77,19 +86,16 @@ function App() {
       <Routes>
         <Route path="/" element={<AuthPanel onLogin={doLogin} onSignup={doSignup} loading={loading} />} />
 
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute user={user}>
-              <Dashboard user={user} setNotification={setNotification} />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/inicio" element={<ProtectedRoute user={user}><Inicio user={user} /></ProtectedRoute>} />
+        <Route path="/analise" element={<ProtectedRoute user={user}><Analise user={user} /></ProtectedRoute>} />
+        <Route path="/dados" element={<ProtectedRoute user={user}><Dados user={user} /></ProtectedRoute>} />
+        <Route path="/financeiro" element={<ProtectedRoute user={user}><Financeiro user={user} /></ProtectedRoute>} />
+        <Route path="/simulador" element={<ProtectedRoute user={user}><Simulador user={user} /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
-      <AuthModal visible={showAuthModal} onClose={() => setShowAuthModal(false)} onRequireAuth={requireAuth} />
+      <AuthModal visible={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 }

@@ -10,36 +10,51 @@ const signToken = (user) => {
 };
 
 export const signup = async (req, res) => {
-  const { nome, email, senha } = req.body;
-  if (!nome || !email || !senha) return res.status(400).json({ error: 'Preencha todos os campos' });
+  try {
+    const { nome, email, senha } = req.body;
+    if (!nome || !email || !senha) return res.status(400).json({ error: 'Preencha todos os campos' });
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return res.status(409).json({ error: 'Email já cadastrado' });
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) return res.status(409).json({ error: 'Email já cadastrado' });
 
-  const hashed = await bcrypt.hash(senha, 10);
-  const user = await prisma.user.create({ data: { nome, email, senha: hashed } });
+    const hashed = await bcrypt.hash(senha, 10);
+    const user = await prisma.user.create({ data: { nome, email, senha: hashed } });
 
-  const token = signToken(user);
-  return res.status(201).json({ message: 'Usuário criado', user: { id: user.id, nome: user.nome, email: user.email }, token });
+    const token = signToken(user);
+    return res.status(201).json({ message: 'Usuário criado', user: { id: user.id, nome: user.nome, email: user.email }, token });
+  } catch (err) {
+    console.error('signup error:', err);
+    return res.status(500).json({ error: 'Erro interno no servidor' });
+  }
 };
 
 export const login = async (req, res) => {
-  const { email, senha } = req.body;
-  if (!email || !senha) return res.status(400).json({ error: 'Preencha todos os campos' });
+  try {
+    const { email, senha } = req.body;
+    if (!email || !senha) return res.status(400).json({ error: 'Preencha todos os campos' });
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return res.status(401).json({ error: 'Credenciais inválidas' });
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(401).json({ error: 'Credenciais inválidas' });
 
-  const isValid = await bcrypt.compare(senha, user.senha);
-  if (!isValid) return res.status(401).json({ error: 'Credenciais inválidas' });
+    const isValid = await bcrypt.compare(senha, user.senha);
+    if (!isValid) return res.status(401).json({ error: 'Credenciais inválidas' });
 
-  const token = signToken(user);
-  return res.json({ message: 'Login bem-sucedido', user: { id: user.id, nome: user.nome, email: user.email }, token });
+    const token = signToken(user);
+    return res.json({ message: 'Login bem-sucedido', user: { id: user.id, nome: user.nome, email: user.email }, token });
+  } catch (err) {
+    console.error('login error:', err);
+    return res.status(500).json({ error: 'Erro interno no servidor' });
+  }
 };
 
 export const profile = async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
-  if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
 
-  return res.json({ id: user.id, nome: user.nome, email: user.email, data_criacao: user.data_criacao });
+    return res.json({ id: user.id, nome: user.nome, email: user.email, data_criacao: user.data_criacao });
+  } catch (err) {
+    console.error('profile error:', err);
+    return res.status(500).json({ error: 'Erro interno no servidor' });
+  }
 };

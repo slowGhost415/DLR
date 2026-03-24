@@ -1,81 +1,116 @@
 import { useState } from 'react';
 
 const AuthPanel = ({ onLogin, onSignup, loading }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [form, setForm] = useState({ nome: '', email: '', senha: '' });
+    const [isLogin, setIsLogin] = useState(true);
+    const [form, setForm] = useState({ nome: '', email: '', senha: '' });
+    const [lembrar, setLembrar] = useState(false);
 
-  const toggle = () => {
-    setIsLogin((curr) => !curr);
-  };
+    const handleChange = (e) => {
+        setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
 
-  const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+    const submit = (e) => {
+        e.preventDefault();
+        if (isLogin) {
+            onLogin({ email: form.email.trim(), senha: form.senha });
+        } else {
+            if (!form.nome.trim()) return;
+            onSignup({ nome: form.nome.trim(), email: form.email.trim(), senha: form.senha });
+        }
+    };
 
-  const submit = (e) => {
-    e.preventDefault();
-    if (isLogin) {
-      onLogin({ email: form.email.trim(), senha: form.senha });
-    } else {
-      if (!form.nome.trim()) return;
-      onSignup({ nome: form.nome.trim(), email: form.email.trim(), senha: form.senha });
-    }
-  };
+    return (
+        <div className="auth-page">
+            <div className="auth-card">
+                <div className="auth-logo">
+                    <div className="auth-logo-icon">
+                        <span style={{ fontSize: '1.3rem' }}>&#128200;</span>
+                    </div>
+                    <div className="auth-logo-text">
+                        <h2>Cariri Econômico</h2>
+                        <span>Plataforma de análise macroeconômica</span>
+                    </div>
+                </div>
 
-  return (
-    <div className={`auth-outer ${isLogin ? 'login-mode' : 'signup-mode'}`}>
-      <div className="panels-container">
-        <div className="panel left-panel">
-          <div className="panel-content">
-            <h3>Welcome Back!</h3>
-            <p>Seja bem-vindo de volta. Faça login para acessar análises e ferramentas.</p>
-            <button onClick={toggle}>Sign In</button>
-          </div>
-        </div>
+                <h1 className="auth-title">{isLogin ? 'Bem-vindo de volta' : 'Criar conta'}</h1>
+                <p className="auth-subtitle">
+                    {isLogin
+                        ? 'Acesse sua conta para continuar suas análises.'
+                        : 'Cadastre-se para acessar todos os recursos da plataforma.'}
+                </p>
 
-        <div className="panel right-panel">
-          <div className="panel-content">
-            <h3>New here?</h3>
-            <p>Crie uma conta para começar a usar nosso painel completo.</p>
-            <button onClick={toggle}>Sign Up</button>
-          </div>
-        </div>
-      </div>
+                <form onSubmit={submit}>
+                    {!isLogin && (
+                        <div className="auth-field">
+                            <label>Nome completo</label>
+                            <input
+                                name="nome"
+                                value={form.nome}
+                                onChange={handleChange}
+                                placeholder="Seu nome"
+                                required={!isLogin}
+                                autoComplete="name"
+                            />
+                        </div>
+                    )}
 
-      <div className="form-container">
-        <form onSubmit={submit} className="auth-form">
-          <h2>{isLogin ? 'Login' : 'Cadastro'}</h2>
+                    <div className="auth-field">
+                        <label>E-mail</label>
+                        <input
+                            type="email"
+                            name="email"
+                            value={form.email}
+                            onChange={handleChange}
+                            placeholder="seu@email.com"
+                            required
+                            autoComplete="email"
+                        />
+                    </div>
 
-          {!isLogin && (
-            <div className="field">
-              <label>Nome</label>
-              <input name="nome" value={form.nome} onChange={handleChange} required={!isLogin} />
+                    <div className="auth-field">
+                        <label>Senha</label>
+                        <input
+                            type="password"
+                            name="senha"
+                            value={form.senha}
+                            onChange={handleChange}
+                            placeholder={isLogin ? 'Sua senha' : 'Mínimo 6 caracteres'}
+                            required
+                            minLength={6}
+                            autoComplete={isLogin ? 'current-password' : 'new-password'}
+                        />
+                    </div>
+
+                    {isLogin && (
+                        <div className="auth-options">
+                            <label className="auth-remember">
+                                <input type="checkbox" checked={lembrar} onChange={e => setLembrar(e.target.checked)} />
+                                Lembrar acesso
+                            </label>
+                            <span className="auth-forgot" style={{ cursor: 'default' }}>
+                                Esqueceu a senha?
+                            </span>
+                        </div>
+                    )}
+
+                    <button type="submit" className="auth-btn-primary" disabled={loading}>
+                        {loading ? 'Processando...' : isLogin ? 'Entrar na plataforma' : 'Criar minha conta'}
+                    </button>
+                </form>
+
+                <div className="auth-divider">
+                    <span>ou</span>
+                </div>
+
+                <div className="auth-toggle">
+                    {isLogin ? 'Não tem uma conta?' : 'Já possui uma conta?'}
+                    <button type="button" onClick={() => setIsLogin(v => !v)}>
+                        {isLogin ? 'Cadastre-se gratuitamente' : 'Fazer login'}
+                    </button>
+                </div>
             </div>
-          )}
-
-          <div className="field">
-            <label>Email</label>
-            <input type="email" name="email" value={form.email} onChange={handleChange} required />
-          </div>
-
-          <div className="field">
-            <label>Senha</label>
-            <input type="password" name="senha" value={form.senha} onChange={handleChange} required minLength={6} />
-          </div>
-
-          <button type="submit" className="primary-btn" disabled={loading}>
-            {loading ? 'Processando...' : isLogin ? 'Sign In' : 'Sign Up'}
-          </button>
-
-          <div className="social-icons">
-            <span>🌐</span>
-            <span>💼</span>
-            <span>📱</span>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default AuthPanel;
