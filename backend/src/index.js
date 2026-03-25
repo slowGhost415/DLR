@@ -10,7 +10,7 @@ import investimentoRoutes from './routes/investimentoRoutes.js';
 
 dotenv.config();
 
-const app = express();
+const app  = express();
 const allowedOrigins = process.env.FRONTEND_URL
   ? [process.env.FRONTEND_URL, 'http://localhost:5173']
   : ['http://localhost:5173'];
